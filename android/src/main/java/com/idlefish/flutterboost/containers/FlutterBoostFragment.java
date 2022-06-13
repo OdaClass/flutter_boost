@@ -1,5 +1,10 @@
 package com.idlefish.flutterboost.containers;
 
+import static com.idlefish.flutterboost.containers.FlutterActivityLaunchConfigs.ACTIVITY_RESULT_KEY;
+import static com.idlefish.flutterboost.containers.FlutterActivityLaunchConfigs.EXTRA_UNIQUE_ID;
+import static com.idlefish.flutterboost.containers.FlutterActivityLaunchConfigs.EXTRA_URL;
+import static com.idlefish.flutterboost.containers.FlutterActivityLaunchConfigs.EXTRA_URL_PARAM;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -12,13 +17,13 @@ import android.view.ViewGroup;
 import com.idlefish.flutterboost.Assert;
 import com.idlefish.flutterboost.FlutterBoost;
 import com.idlefish.flutterboost.FlutterBoostUtils;
-import com.idlefish.flutterboost.Messages;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 import io.flutter.Log;
+import io.flutter.embedding.android.ExclusiveAppComponent;
 import io.flutter.embedding.android.FlutterFragment;
 import io.flutter.embedding.android.FlutterTextureView;
 import io.flutter.embedding.android.FlutterView;
@@ -27,16 +32,11 @@ import io.flutter.embedding.android.TransparencyMode;
 import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.plugin.platform.PlatformPlugin;
 
-import static com.idlefish.flutterboost.containers.FlutterActivityLaunchConfigs.ACTIVITY_RESULT_KEY;
-import static com.idlefish.flutterboost.containers.FlutterActivityLaunchConfigs.EXTRA_UNIQUE_ID;
-import static com.idlefish.flutterboost.containers.FlutterActivityLaunchConfigs.EXTRA_URL;
-import static com.idlefish.flutterboost.containers.FlutterActivityLaunchConfigs.EXTRA_URL_PARAM;
-
-public class FlutterBoostFragment extends FlutterFragment implements FlutterViewContainer {
+public class FlutterBoostFragment extends FlutterFragment implements FlutterViewContainer, ExclusiveAppComponent<Activity> {
     private static final String TAG = "FlutterBoostFragment";
     private static final boolean DEBUG = false;
     private final String who = UUID.randomUUID().toString();
-    private final FlutterTextureHooker textureHooker=new FlutterTextureHooker();
+    private final FlutterTextureHooker textureHooker = new FlutterTextureHooker();
     private FlutterView flutterView;
     private PlatformPlugin platformPlugin;
     private LifecycleStage stage;
@@ -52,6 +52,11 @@ public class FlutterBoostFragment extends FlutterFragment implements FlutterView
          * a new FlutterFragment is attached in Flutter2.0.
          */
         if (DEBUG) Log.d(TAG, "#detachFromFlutterEngine: " + this);
+    }
+
+    @Override
+    public Activity getAppComponent() {
+        return getActivity();
     }
 
     @Override
@@ -104,7 +109,7 @@ public class FlutterBoostFragment extends FlutterFragment implements FlutterView
         } else {
             didFragmentShow();
         }
-        if (DEBUG) Log.d(TAG, "#onHiddenChanged: hidden="  + hidden + ", " + this);
+        if (DEBUG) Log.d(TAG, "#onHiddenChanged: hidden=" + hidden + ", " + this);
     }
 
     @Override
@@ -118,7 +123,8 @@ public class FlutterBoostFragment extends FlutterFragment implements FlutterView
         } else {
             didFragmentHide();
         }
-        if (DEBUG) Log.d(TAG, "#setUserVisibleHint: isVisibleToUser="  + isVisibleToUser + ", " + this);
+        if (DEBUG)
+            Log.d(TAG, "#setUserVisibleHint: isVisibleToUser=" + isVisibleToUser + ", " + this);
     }
 
     @Override
@@ -143,7 +149,7 @@ public class FlutterBoostFragment extends FlutterFragment implements FlutterView
             // Update system UI overlays to match Flutter's desired system chrome style
             onUpdateSystemUiOverlays();
         }
-       if (DEBUG) Log.d(TAG, "#onResume: isHidden=" + isHidden() + ", " + this);
+        if (DEBUG) Log.d(TAG, "#onResume: isHidden=" + isHidden() + ", " + this);
     }
 
     // Update system UI overlays to match Flutter's desired system chrome style
@@ -215,11 +221,11 @@ public class FlutterBoostFragment extends FlutterFragment implements FlutterView
 
     @Override
     public boolean shouldRestoreAndSaveState() {
-      if (getArguments().containsKey(ARG_ENABLE_STATE_RESTORATION)) {
-        return getArguments().getBoolean(ARG_ENABLE_STATE_RESTORATION);
-      }
-      // Defaults to |true|.
-      return true;
+        if (getArguments().containsKey(ARG_ENABLE_STATE_RESTORATION)) {
+            return getArguments().getBoolean(ARG_ENABLE_STATE_RESTORATION);
+        }
+        // Defaults to |true|.
+        return true;
     }
 
     @Override
@@ -273,7 +279,7 @@ public class FlutterBoostFragment extends FlutterFragment implements FlutterView
 
     @Override
     public Map<String, Object> getUrlParams() {
-        return (HashMap<String, Object>)getArguments().getSerializable(EXTRA_URL_PARAM);
+        return (HashMap<String, Object>) getArguments().getSerializable(EXTRA_URL_PARAM);
     }
 
     @Override
@@ -314,7 +320,7 @@ public class FlutterBoostFragment extends FlutterFragment implements FlutterView
     private void performAttach() {
         if (!isAttached) {
             // Attach plugins to the activity.
-            getFlutterEngine().getActivityControlSurface().attachToActivity(getActivity(), getLifecycle());
+            getFlutterEngine().getActivityControlSurface().attachToActivity(this, getLifecycle());
 
             if (platformPlugin == null) {
                 platformPlugin = new PlatformPlugin(getActivity(), getFlutterEngine().getPlatformChannel());
@@ -359,8 +365,8 @@ public class FlutterBoostFragment extends FlutterFragment implements FlutterView
     @Override
     public TransparencyMode getTransparencyMode() {
         String transparencyModeName =
-            getArguments()
-                .getString(ARG_FLUTTERVIEW_TRANSPARENCY_MODE, TransparencyMode.opaque.name());
+                getArguments()
+                        .getString(ARG_FLUTTERVIEW_TRANSPARENCY_MODE, TransparencyMode.opaque.name());
         return TransparencyMode.valueOf(transparencyModeName);
     }
 
@@ -393,7 +399,7 @@ public class FlutterBoostFragment extends FlutterFragment implements FlutterView
         }
 
         public CachedEngineFragmentBuilder urlParams(Map<String, Object> params) {
-            this.params = (params instanceof HashMap) ? (HashMap)params : new HashMap<String, Object>(params);
+            this.params = (params instanceof HashMap) ? (HashMap) params : new HashMap<String, Object>(params);
             return this;
         }
 
@@ -408,13 +414,13 @@ public class FlutterBoostFragment extends FlutterFragment implements FlutterView
             return this;
         }
 
-        public CachedEngineFragmentBuilder renderMode( RenderMode renderMode) {
+        public CachedEngineFragmentBuilder renderMode(RenderMode renderMode) {
             this.renderMode = renderMode;
             return this;
         }
 
         public CachedEngineFragmentBuilder transparencyMode(
-                 TransparencyMode transparencyMode) {
+                TransparencyMode transparencyMode) {
             this.transparencyMode = transparencyMode;
             return this;
         }

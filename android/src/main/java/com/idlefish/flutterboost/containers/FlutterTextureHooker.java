@@ -58,7 +58,7 @@ class FlutterTextureHooker {
                         if (engine != null) {
 
                             FlutterRenderer flutterRenderer = engine.getRenderer();
-                            Surface         surface         = new Surface(restoreSurface);
+                            Surface         surface         = new Surface(restoreSurface, true);
                             flutterRenderer.startRenderingToSurface(surface);
 
                             flutterTextureView.setSurfaceTexture(restoreSurface);
