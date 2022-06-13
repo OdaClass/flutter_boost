@@ -1,5 +1,14 @@
 package com.idlefish.flutterboost.containers;
 
+import static com.idlefish.flutterboost.containers.FlutterActivityLaunchConfigs.ACTIVITY_RESULT_KEY;
+import static com.idlefish.flutterboost.containers.FlutterActivityLaunchConfigs.EXTRA_BACKGROUND_MODE;
+import static com.idlefish.flutterboost.containers.FlutterActivityLaunchConfigs.EXTRA_CACHED_ENGINE_ID;
+import static com.idlefish.flutterboost.containers.FlutterActivityLaunchConfigs.EXTRA_DESTROY_ENGINE_WITH_ACTIVITY;
+import static com.idlefish.flutterboost.containers.FlutterActivityLaunchConfigs.EXTRA_ENABLE_STATE_RESTORATION;
+import static com.idlefish.flutterboost.containers.FlutterActivityLaunchConfigs.EXTRA_UNIQUE_ID;
+import static com.idlefish.flutterboost.containers.FlutterActivityLaunchConfigs.EXTRA_URL;
+import static com.idlefish.flutterboost.containers.FlutterActivityLaunchConfigs.EXTRA_URL_PARAM;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -10,13 +19,13 @@ import android.util.Log;
 import com.idlefish.flutterboost.Assert;
 import com.idlefish.flutterboost.FlutterBoost;
 import com.idlefish.flutterboost.FlutterBoostUtils;
-import com.idlefish.flutterboost.Messages;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import io.flutter.embedding.android.ExclusiveAppComponent;
 import io.flutter.embedding.android.FlutterActivity;
 import io.flutter.embedding.android.FlutterActivityLaunchConfigs.BackgroundMode;
 import io.flutter.embedding.android.FlutterTextureView;
@@ -26,20 +35,11 @@ import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.embedding.engine.renderer.FlutterRenderer;
 import io.flutter.plugin.platform.PlatformPlugin;
 
-import static com.idlefish.flutterboost.containers.FlutterActivityLaunchConfigs.ACTIVITY_RESULT_KEY;
-import static com.idlefish.flutterboost.containers.FlutterActivityLaunchConfigs.EXTRA_BACKGROUND_MODE;
-import static com.idlefish.flutterboost.containers.FlutterActivityLaunchConfigs.EXTRA_CACHED_ENGINE_ID;
-import static com.idlefish.flutterboost.containers.FlutterActivityLaunchConfigs.EXTRA_DESTROY_ENGINE_WITH_ACTIVITY;
-import static com.idlefish.flutterboost.containers.FlutterActivityLaunchConfigs.EXTRA_ENABLE_STATE_RESTORATION;
-import static com.idlefish.flutterboost.containers.FlutterActivityLaunchConfigs.EXTRA_UNIQUE_ID;
-import static com.idlefish.flutterboost.containers.FlutterActivityLaunchConfigs.EXTRA_URL;
-import static com.idlefish.flutterboost.containers.FlutterActivityLaunchConfigs.EXTRA_URL_PARAM;
-
-public class FlutterBoostActivity extends FlutterActivity implements FlutterViewContainer {
+public class FlutterBoostActivity extends FlutterActivity implements FlutterViewContainer, ExclusiveAppComponent<Activity> {
     private static final String TAG = "FlutterBoostActivity";
     private static final boolean DEBUG = false;
     private final String who = UUID.randomUUID().toString();
-    private final FlutterTextureHooker textureHooker =new FlutterTextureHooker();
+    private final FlutterTextureHooker textureHooker = new FlutterTextureHooker();
     private FlutterView flutterView;
     private PlatformPlugin platformPlugin;
     private LifecycleStage stage;
@@ -68,6 +68,11 @@ public class FlutterBoostActivity extends FlutterActivity implements FlutterView
          * a new FlutterActivity is attached in Flutter2.0.
          */
         if (DEBUG) Log.d(TAG, "#detachFromFlutterEngine: " + this);
+    }
+
+    @Override
+    public Activity getAppComponent() {
+        return getActivity();
     }
 
     @Override
@@ -156,7 +161,7 @@ public class FlutterBoostActivity extends FlutterActivity implements FlutterView
     private void performAttach() {
         if (!isAttached) {
             // Attach plugins to the activity.
-            getFlutterEngine().getActivityControlSurface().attachToActivity(getActivity(), getLifecycle());
+            getFlutterEngine().getActivityControlSurface().attachToActivity(this, getLifecycle());
 
             if (platformPlugin == null) {
                 platformPlugin = new PlatformPlugin(getActivity(), getFlutterEngine().getPlatformChannel());
@@ -198,7 +203,7 @@ public class FlutterBoostActivity extends FlutterActivity implements FlutterView
             Field isDisplayingFlutterUiField = FlutterRenderer.class.getDeclaredField("isDisplayingFlutterUi");
             isDisplayingFlutterUiField.setAccessible(true);
             isDisplayingFlutterUiField.setBoolean(flutterRenderer, false);
-            assert(!flutterRenderer.isDisplayingFlutterUi());
+            assert (!flutterRenderer.isDisplayingFlutterUi());
         } catch (Exception e) {
             Log.e(TAG, "You *should* keep fields in io.flutter.embedding.engine.renderer.FlutterRenderer.");
             e.printStackTrace();
@@ -292,7 +297,7 @@ public class FlutterBoostActivity extends FlutterActivity implements FlutterView
 
     @Override
     public Map<String, Object> getUrlParams() {
-        return (HashMap<String, Object>)getIntent().getSerializableExtra(EXTRA_URL_PARAM);
+        return (HashMap<String, Object>) getIntent().getSerializableExtra(EXTRA_URL_PARAM);
     }
 
     @Override
@@ -305,12 +310,12 @@ public class FlutterBoostActivity extends FlutterActivity implements FlutterView
 
     @Override
     public String getCachedEngineId() {
-      return FlutterBoost.ENGINE_ID;
+        return FlutterBoost.ENGINE_ID;
     }
 
     @Override
     public boolean isOpaque() {
-        return getBackgroundMode() ==  BackgroundMode.opaque;
+        return getBackgroundMode() == BackgroundMode.opaque;
     }
 
     @Override
@@ -331,28 +336,28 @@ public class FlutterBoostActivity extends FlutterActivity implements FlutterView
         }
 
 
-        public FlutterBoostActivity.CachedEngineIntentBuilder destroyEngineWithActivity(boolean destroyEngineWithActivity) {
+        public CachedEngineIntentBuilder destroyEngineWithActivity(boolean destroyEngineWithActivity) {
             this.destroyEngineWithActivity = destroyEngineWithActivity;
             return this;
         }
 
 
-        public FlutterBoostActivity.CachedEngineIntentBuilder backgroundMode(BackgroundMode backgroundMode) {
+        public CachedEngineIntentBuilder backgroundMode(BackgroundMode backgroundMode) {
             this.backgroundMode = backgroundMode.name();
             return this;
         }
 
-        public FlutterBoostActivity.CachedEngineIntentBuilder url(String url) {
+        public CachedEngineIntentBuilder url(String url) {
             this.url = url;
             return this;
         }
 
-        public FlutterBoostActivity.CachedEngineIntentBuilder urlParams(Map<String, Object> params) {
-            this.params = (params instanceof HashMap) ? (HashMap)params : new HashMap<String, Object>(params);
+        public CachedEngineIntentBuilder urlParams(Map<String, Object> params) {
+            this.params = (params instanceof HashMap) ? (HashMap) params : new HashMap<String, Object>(params);
             return this;
         }
 
-        public FlutterBoostActivity.CachedEngineIntentBuilder uniqueId(String uniqueId) {
+        public CachedEngineIntentBuilder uniqueId(String uniqueId) {
             this.uniqueId = uniqueId;
             return this;
         }
