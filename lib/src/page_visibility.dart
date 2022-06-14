@@ -46,22 +46,18 @@ class PageVisibilityBinding {
   static final PageVisibilityBinding instance = PageVisibilityBinding._();
 
   ///listeners for single page event
-  final Map<Route<dynamic>, Set<PageVisibilityObserver>> _listeners =
-      <Route<dynamic>, Set<PageVisibilityObserver>>{};
+  final Map<Route<dynamic>, Set<PageVisibilityObserver>> _listeners = <Route<dynamic>, Set<PageVisibilityObserver>>{};
 
   ///listeners for all pages event
-  final Set<GlobalPageVisibilityObserver> _globalListeners =
-      <GlobalPageVisibilityObserver>{};
+  final Set<GlobalPageVisibilityObserver> _globalListeners = <GlobalPageVisibilityObserver>{};
 
   /// Registers the given object and route as a binding observer.
   void addObserver(PageVisibilityObserver observer, Route<dynamic> route) {
     assert(observer != null);
     assert(route != null);
-    final observers =
-        _listeners.putIfAbsent(route, () => <PageVisibilityObserver>{});
+    final observers = _listeners.putIfAbsent(route, () => <PageVisibilityObserver>{});
     observers.add(observer);
-    Logger.log(
-        'page_visibility, #addObserver, $observers, ${route.settings.name}');
+    Logger.log('page_visibility, #addObserver, $observers, ${route.settings.name}');
   }
 
   /// Unregisters the given observer.
@@ -112,8 +108,7 @@ class PageVisibilityBinding {
         }
       }
     }
-    Logger.log(
-        'page_visibility, #dispatchPageShowEvent, ${route.settings.name}');
+    Logger.log('page_visibility, #dispatchPageShowEvent, ${route.settings.name}');
 
     dispatchGlobalPageShowEvent(route);
   }
@@ -121,7 +116,7 @@ class PageVisibilityBinding {
   ///When page show first time,we should dispatch event in [FrameCallback]
   ///to avoid the page can't receive the show event
   void dispatchPageShowEventOnPageShowFirstTime(Route<dynamic>? route) {
-    WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       dispatchPageShowEvent(route);
     });
   }
@@ -141,8 +136,7 @@ class PageVisibilityBinding {
         }
       }
     }
-    Logger.log(
-        'page_visibility, #dispatchPageHideEvent, ${route.settings.name}');
+    Logger.log('page_visibility, #dispatchPageHideEvent, ${route.settings.name}');
 
     dispatchGlobalPageHideEvent(route);
   }
@@ -172,8 +166,7 @@ class PageVisibilityBinding {
       }
     }
 
-    Logger.log(
-        'page_visibility, #dispatchPageForgroundEvent, ${route.settings.name}');
+    Logger.log('page_visibility, #dispatchPageForgroundEvent, ${route.settings.name}');
 
     dispatchGlobalForgroundEvent(route);
   }
